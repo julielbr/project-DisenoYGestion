@@ -1,6 +1,6 @@
 import csv
 
-"""Class to transform the data from the annotated vcf file to an csv file"""
+#Class to transform the data from the annotated vcf file to an csv file
 def parse_info(info):
     info_dict = {}
     for entry in info.split(';'):
