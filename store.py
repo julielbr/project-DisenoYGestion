@@ -2,7 +2,7 @@ import csv
 import mysql.connector
 import os
 
-# Set the database credentials to my server 
+# Set the database credentials 
 os.environ['MYSQL_ADDON_HOST'] = 'bizreff5de77axdtjcs2-mysql.services.clever-cloud.com'
 os.environ['MYSQL_ADDON_DB'] = 'bizreff5de77axdtjcs2'
 os.environ['MYSQL_ADDON_USER'] = 'uuftcemjcreyfh8h'
@@ -55,12 +55,12 @@ try:
     );
 
     CREATE TABLE IF NOT EXISTS Variant (
-        variant_rs_id VARCHAR(50) NOT NULL, 
+        variant_rs_id VARCHAR(255) NOT NULL, 
         alt VARCHAR(255), 
-        variant_type VARCHAR(50), 
+        variant_type VARCHAR(255), 
         pos INT NOT NULL, 
         ref VARCHAR(255) NOT NULL,  
-        chrom VARCHAR(20) NOT NULL, 
+        chrom VARCHAR(255) NOT NULL, 
         PRIMARY KEY (variant_rs_id),
         FOREIGN KEY (pos, ref, chrom) REFERENCES LocationInfo(pos, ref, chrom)
     );
@@ -101,7 +101,7 @@ try:
         for row in reader:
             chrom = row['CHROM']
             pos = int(row['POS'])
-            ref = row['REF']
+            ref = row['REF'][:255]
             alt = row['ALT']
             allele_id = row['ALLELEID']
             rs_id = row['ID']
@@ -120,6 +120,8 @@ finally:
     if conn.is_connected():
         cursor.close()
         conn.close()
+
+
 
 
 
