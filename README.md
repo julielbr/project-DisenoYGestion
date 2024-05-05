@@ -12,41 +12,10 @@ The project is divided into several tasks:
 
 
 ## Project Structure
-GenomicDataTransformation/
-'''
 
-│
-├── src/
-│   ├── annotate.py                 # Script for annotating genomic data
-│   ├── download.py                 # Script to download necessary data
-│   ├── store.py                    # Script to store data into the database
-│   └── transform.py                # Script for data transformation
-│
-├── data/
-│   ├── Annotation.csv              # Annotations for genomic variants
-│   ├── ChromosomeSequence.csv      # Chromosome sequence data
-│   ├── Disease.csv                 # Disease information
-│   ├── DiseaseVariantLink.csv      # Links between diseases and variants
-│   ├── HGVSExpression.csv          # HGVS expressions of genetic variants
-│   ├── Interpretation.csv          # Clinical interpretations of variants
-│   ├── LocationInfo.csv            # Genomic location information
-│   └── LocationInfoVariantLink.csv # Links between locations and variants
-│
-├── snpEff/
-│   ├── snpEff.jar                  # snpEff program for genomic annotations
-│   ├── SnpSift.jar                 # SnpSift tool for variant data manipulation
-│   ├── snpEff_genes.txt            # Gene data for snpEff
-│   ├── snpEff.config               # Configuration for snpEff
-│   └── snpEff_summary.html         # Summary output from snpEff
-│
-│
-├── test/
-│   ├── test_annotated.vcf          # Test annotated VCF file 
-│   └── test.vcf                    # Test VCF file
-│
-└── README.md                       # Documentation  
 
-'''
+<img src="/Screenshot 2024-05-05 at 10.43.49.png" alt="Project structure" width="400" height="700">
+
 
 
 This project requires Python and several libraries and tools to manage and transform genomic data. 
