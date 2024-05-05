@@ -14,7 +14,7 @@ The project is divided into several tasks:
 ## Project Structure
 
 
-<img src="/Screenshot 2024-05-05 at 10.43.49.png" alt="Project structure" width="400" height="700">
+<img src="/Screenshot 2024-05-05 at 10.43.49.png" alt="Project structure" width="500" height="700">
 
 
 
