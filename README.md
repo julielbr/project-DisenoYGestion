@@ -13,14 +13,14 @@ The project is divided into several tasks:
 
 ## Project Structure
 GenomicDataTransformation/
+'''
+
 │
 ├── src/
 │   ├── annotate.py                 # Script for annotating genomic data
 │   ├── download.py                 # Script to download necessary data
 │   ├── store.py                    # Script to store data into the database
-│   ├── storeVariant.py             # Script specifically for storing variant data
-│   ├── transform.py                # Script for data transformation
-│   └── database_loader.py          # Main script to load data into the database
+│   └── transform.py                # Script for data transformation
 │
 ├── data/
 │   ├── Annotation.csv              # Annotations for genomic variants
@@ -39,17 +39,14 @@ GenomicDataTransformation/
 │   ├── snpEff.config               # Configuration for snpEff
 │   └── snpEff_summary.html         # Summary output from snpEff
 │
-├── exec/
-│   └── files                       # Directory for executable files and scripts
 │
 ├── test/
-│   ├── test_annotated.vcf          # Test annotated VCF file
+│   ├── test_annotated.vcf          # Test annotated VCF file 
 │   └── test.vcf                    # Test VCF file
 │
-└── README.md                       # Documentation for using this project
+└── README.md                       # Documentation  
 
-
-
+'''
 
 
 This project requires Python and several libraries and tools to manage and transform genomic data. 
