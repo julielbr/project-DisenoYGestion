@@ -1,8 +1,8 @@
-import csv
 import mysql.connector
+import pandas as pd
 import os
 
-# Set the database credentials
+# database credentials 
 os.environ['MYSQL_ADDON_HOST'] = 'bushwrafohbfd3asxkvx-mysql.services.clever-cloud.com'
 os.environ['MYSQL_ADDON_DB'] = 'bushwrafohbfd3asxkvx'
 os.environ['MYSQL_ADDON_USER'] = 'ubgpw6ztfjpo94xf'
@@ -10,151 +10,135 @@ os.environ['MYSQL_ADDON_PASSWORD'] = 'fwlcozfw83vQQ3XGgFjW'
 os.environ['MYSQL_ADDON_PORT'] = '3306'
 
 
-def connect_to_db():
-    """Establishes connection to the database."""
-    try:
-        conn = mysql.connector.connect(
-            host=os.environ['MYSQL_ADDON_HOST'],
-            user=os.environ['MYSQL_ADDON_USER'],
-            password=os.environ['MYSQL_ADDON_PASSWORD'],
-            database=os.environ['MYSQL_ADDON_DB'],
-            port=int(os.environ['MYSQL_ADDON_PORT'])
-        )
-        return conn
-    except mysql.connector.Error as err:
-        print(f"Failed to connect to database: {err}")
-        exit(1)
+db_config = {
+    'host': os.getenv('MYSQL_ADDON_HOST'),
+    'user': os.getenv('MYSQL_ADDON_USER'),
+    'password': os.getenv('MYSQL_ADDON_PASSWORD'),
+    'database': os.getenv('MYSQL_ADDON_DB'),
+    'port': os.getenv('MYSQL_ADDON_PORT')
+}
 
 
-def create_tables(cursor):
-    """Creates database tables if they do not exist."""
+
+host = os.getenv('MYSQL_ADDON_HOST')
+dbname = os.getenv('MYSQL_ADDON_DB')
+user = os.getenv('MYSQL_ADDON_USER')
+password = os.getenv('MYSQL_ADDON_PASSWORD')
+port = os.getenv('MYSQL_ADDON_PORT')
+
+# Establish connection with the database
+conn = mysql.connector.connect(
+    host=host,
+    database=dbname,
+    user=user,
+    password=password,
+    port=port
+)
+cursor = conn.cursor()
+
+# create the tables
+def create_tables():
     commands = [
-        """CREATE TABLE IF NOT EXISTS ChromosomeSequence (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            chromosome VARCHAR(255),
-            assembly VARCHAR(255)
-        )""",
-        """CREATE TABLE IF NOT EXISTS LocationInfo (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            pos INT,
-            ref VARCHAR(255),
-            chromosome_id INT,
-            FOREIGN KEY (chromosome_id) REFERENCES ChromosomeSequence(id)
-        )""",
-        """CREATE TABLE IF NOT EXISTS Variant (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            rs_id VARCHAR(255),
-            alt VARCHAR(255),
-            variant_type VARCHAR(255),
-            location_info_id INT,
-            FOREIGN KEY (location_info_id) REFERENCES LocationInfo(id)
-        )""",
-        """CREATE TABLE IF NOT EXISTS Annotation (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            impact VARCHAR(255),
+        """
+        CREATE TABLE IF NOT EXISTS Variant (
+            id INT PRIMARY KEY,
+            chrom INT,
+            pos BIGINT,
+            rs_id INT,
+            ref VARCHAR(10),
+            alt VARCHAR(10)
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS Annotation (
+            id INT PRIMARY KEY,
+            impact VARCHAR(50),
             consequence VARCHAR(255),
-            allele VARCHAR(255),
+            allele VARCHAR(100),
             variant_id INT,
             FOREIGN KEY (variant_id) REFERENCES Variant(id)
-        )""",
-        """CREATE TABLE IF NOT EXISTS HGVSExpression (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS ChromosomeSequence (
+            id INT PRIMARY KEY,
+            chromosome INT,
+            assembly VARCHAR(10)
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS Disease (
+            id INT PRIMARY KEY,
+            preferred_name VARCHAR(255)
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS HGVSExpression (
+            id INT PRIMARY KEY,
             hgvs VARCHAR(255),
             variant_id INT,
             FOREIGN KEY (variant_id) REFERENCES Variant(id)
-        )""",
-        """CREATE TABLE IF NOT EXISTS Interpretation (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            clinical_significance VARCHAR(255),
-            method VARCHAR(255),
-            variant_origin VARCHAR(255),
-            review_status VARCHAR(255),
-            submitter VARCHAR(255),
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS Interpretation (
+            id INT PRIMARY KEY,
+            clinical_significance VARCHAR(50),
+            method VARCHAR(100),
+            variant_origin VARCHAR(100),
+            review_status VARCHAR(100),
+            submitter VARCHAR(100),
             variant_id INT,
             FOREIGN KEY (variant_id) REFERENCES Variant(id)
-        )""",
-        """CREATE TABLE IF NOT EXISTS Disease (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            preferred_name VARCHAR(255)
-        )""",
-        """CREATE TABLE IF NOT EXISTS DiseaseVariantLink (
-            disease_id INT,
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS LocationInfo (
+            id INT PRIMARY KEY,
+            pos BIGINT,
+            ref VARCHAR(10),
+            chromosome_id INT
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS LocationInfoVariantLink (
+            location_info_id INT,
             variant_id INT,
-            FOREIGN KEY (disease_id) REFERENCES Disease(id),
-            FOREIGN KEY (variant_id) REFERENCES Variant(id),
-            PRIMARY KEY (disease_id, variant_id)
-        )""",
-        """CREATE TABLE IF NOT EXISTS `Database` (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255),
-            URL VARCHAR(255),
-            interpretation_id INT,
-            FOREIGN KEY (interpretation_id) REFERENCES Interpretation(id)
-        )"""
+            FOREIGN KEY (location_info_id) REFERENCES LocationInfo(id),
+            FOREIGN KEY (variant_id) REFERENCES Variant(id)
+        );
+        """
     ]
-
     for command in commands:
-        try:
-            cursor.execute(command)
-        except mysql.connector.Error as err:
-            print(f"An error occurred creating table: {err}")
+        cursor.execute(command)
+    conn.commit()
 
+# Function to load data from CSV to table
+def load_data_from_csv(file_path, table_name):
+    df = pd.read_csv(file_path)
+    for index, row in df.iterrows():
+        placeholders = ', '.join(['%s'] * len(row))
+        sql = f"INSERT INTO {table_name} VALUES ({placeholders})"
+        cursor.execute(sql, tuple(row))
+    conn.commit()
 
-def insert_data_from_csv(cursor, csv_file, table_name):
-    """Inserts data from a CSV file into the specified table."""
-    try:
-        with open(csv_file, mode='r', encoding='utf-8') as file:
-            csv_reader = csv.reader(file)
-            headers = next(csv_reader)  # Assuming the first row is headers
-            placeholders = ', '.join(['%s'] * len(headers))
-            query = f"INSERT INTO {table_name} ({', '.join(headers)}) VALUES ({placeholders})"
-            for row in csv_reader:
-                if len(row) == len(headers):
-                    cursor.execute(query, tuple(row))
-                else:
-                    print(f"Skipping row due to column mismatch: {row}")
-    except FileNotFoundError:
-        print(f"File not found: {csv_file}")
-    except mysql.connector.Error as err:
-        print(f"Error inserting data into {table_name}: {err}")
+# Create tables
+create_tables()
 
+# Load data into tables
+load_data_from_csv('/Users/julielervagbreivik/DSG/Variant.csv', 'Variant')
+load_data_from_csv('/Users/julielervagbreivik/DSG/Annotation.csv', 'Annotation')
+load_data_from_csv('/Users/julielervagbreivik/DSG/ChromosomeSequence.csv', 'ChromosomeSequence')
+load_data_from_csv('/Users/julielervagbreivik/DSG/Disease.csv', 'Disease')
+load_data_from_csv('/Users/julielervagbreivik/DSG/HGVSExpression.csv', 'HGVSExpression')
+load_data_from_csv('/Users/julielervagbreivik/DSG/Interpretation.csv', 'Interpretation')
+load_data_from_csv('/Users/julielervagbreivik/DSG/LocationInfo.csv', 'LocationInfo')
+load_data_from_csv('/Users/julielervagbreivik/DSG/LocationInfoVariantLink.csv', 'LocationInfoVariantLink')
 
+# Close communication with the database
+cursor.close()
+conn.close()
 
-def main():
-    conn = connect_to_db()
-    if conn.is_connected():
-        cursor = conn.cursor()
-        create_tables(cursor)
-        base_dir = '/Users/julielervagbreivik/DSG'
-        try:
-            # Start transaction
-            conn.start_transaction()
-
-            # Insert data for all tables
-            insert_data_from_csv(cursor, f'{base_dir}/Variant.csv', 'Variant')
-            insert_data_from_csv(cursor, f'{base_dir}/ChromosomeSequence.csv', 'ChromosomeSequence')
-            insert_data_from_csv(cursor, f'{base_dir}/LocationInfo.csv', 'LocationInfo')
-            insert_data_from_csv(cursor, f'{base_dir}/Annotation.csv', 'Annotation')
-            insert_data_from_csv(cursor, f'{base_dir}/HGVSExpression.csv', 'HGVSExpression')
-            insert_data_from_csv(cursor, f'{base_dir}/Interpretation.csv', 'Interpretation')
-            insert_data_from_csv(cursor, f'{base_dir}/Disease.csv', 'Disease')
-            insert_data_from_csv(cursor, f'{base_dir}/DiseaseVariantLink.csv', 'DiseaseVariantLink')
-
-            # Commit all changes
-            conn.commit()
-            print("Data insertion completed successfully.")
-        except mysql.connector.Error as err:
-            print(f"Transaction failed: {err}")
-            conn.rollback()
-        finally:
-            cursor.close()
-            conn.close()
-    else:
-        print("Failed to connect to the database!")
-
-
-if __name__ == "__main__":
-    main()
 
 
 
