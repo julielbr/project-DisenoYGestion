@@ -14,11 +14,7 @@ The project is divided into several tasks:
 ## Project Structure
 
 
-<img src="/Screenshot 2024-05-05 at 10.43.49.png" alt="Project structure" width="500" height="700">
+<img src="/Screenshot 2024-05-05 at 10.43.49.png" alt="Project structure" width="500" height="600">
 
 
 
-This project requires Python and several libraries and tools to manage and transform genomic data. 
-- Here's how to set up your environment:
-
-## How To Run
